@@ -1,0 +1,16 @@
+# Compiled binaries
+*.exe
+*.o
+*.obj
+*.out
+
+# Generated example output
+example/
+
+# WASM artifacts
+*.wasm
+
+# System / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
