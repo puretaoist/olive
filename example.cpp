@@ -12,6 +12,11 @@
 
 static std::vector<std::uint32_t> pixels(WIDTH *HEIGHT);
 
+float lerp(float a, float b, float t)
+{
+    return a + (b - a) * t;
+}
+
 bool lines_example()
 {
     olive_fill(pixels, WIDTH, HEIGHT, 0xFF404040);
@@ -47,20 +52,10 @@ bool circle_example()
 {
     olive_fill(pixels, WIDTH, HEIGHT, 0xFFFFFFFF);
 
-    for (int y = 0; y < ROWS; y++)
-    {
-        for (int x = 0; x < COLS; x++)
-        {
-            float u = (float)x / COLS;
-            float v = (float)y / ROWS;
-            float t = (u + v) / 2;
-
-            size_t radius = CELL_WIDTH;
-            if (CELL_HEIGHT < radius)
-                radius = CELL_HEIGHT;
-            olive_fill_circle(pixels, WIDTH, HEIGHT, x * CELL_WIDTH + CELL_WIDTH / 2, y * CELL_HEIGHT + CELL_HEIGHT / 2, radius / 2, 0xFF202020);
-        }
-    }
+    
+    olive_fill_circle(pixels, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, HEIGHT / 4, 0xFF202020);
+        
+    
     olive_save_into_ppm_file(pixels, WIDTH, HEIGHT, "./example/circle.ppm");
     return true;
 }

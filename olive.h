@@ -7,10 +7,31 @@
 #include <cmath>
 #include <string>
 
-float lerp(float a, float b, float t)
-{
-    return a + (b - a) * t;
-}
+class Olive_Canvas{
+    private:
+        std::vector<std::uint32_t> pixels;
+        size_t width;
+        size_t height;
+        size_t stride;
+
+    public:
+        Olive_Canvas(std::vector<std::uint32_t> &pixels,size_t width,size_t height)
+        :pixels(pixels),width(width),height(height),stride(width){}
+
+        Olive_Canvas(const Olive_Canvas& other)
+        :pixels(other.pixels),width(other.width),height(other.height),stride(other.stride){}
+
+        Olive_Canvas& operator=(const Olive_Canvas& other){
+            if(this!=&other){
+                pixels = other.pixels;
+                width = other.width;
+                height = other.height;
+                stride = other.stride;
+            }
+            return *this;
+        }
+
+};
 
 void sort_triangle_points_by_y(int& x1, int& y1,
                                int& x2, int& y2,
@@ -136,22 +157,27 @@ void olive_fill_circle(std::vector<std::uint32_t> &pixels, size_t pixels_width, 
     int y1 = cy - r;
     int x2 = cx + r;
     int y2 = cy + r;
-    for (int y = y1-1; y <= y2+1; y++)
+    for (int y = y1; y <= y2; y++)
     {
-        if (0 <= y && y < (int)pixels_height)
+        for (int x = x1; x <= x2; x++)
         {
-            for (int x = x1-1; x <= x2+1; x++)
-            {
-                if (0 <= x && x < (int)pixels_width)
-                {
-                    int dx = x - cx;
-                    int dy = y - cy;
-                    if (dx * dx + dy * dy < r * r)
+            int count = 0;
+            for (int soy = 0; soy < 2; ++soy){
+                for (int sox = 0; sox < 2;++sox){
+                    float sx = x + 1.0 / (2 + 1) * (1 + sox);
+                    float sy = y + 1.0 / (2 + 1) * (1 + soy);
+                    float dx = sx - (cx+0.5);
+                    float dy = sy - (cy+0.5);
+                    if (dx * dx + dy * dy <= r * r)
                     {
-                    pixels[y*pixels_width + x] = olive_mix_color(pixels[y*pixels_width + x],color);
+                        count += 1;
                     }
                 }
             }
+            std::uint32_t alpha = (float)count / (float)(2 * 2) * 255;
+            std::uint32_t update_color = (color & 0x00FFFFFF) | (alpha << (3 * 8));
+            pixels[y*pixels_width + x] = olive_mix_color(pixels[y*pixels_width + x],update_color);
+
         }
     }
 }
