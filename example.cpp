@@ -21,7 +21,7 @@ bool lines_example()
 {
     olive_fill(pixels, WIDTH, HEIGHT, 0xFF404040);
 
-    olive_draw_line(pixels, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, 0xFF202020);
+    olive_draw_line(pixels, WIDTH, HEIGHT, 100, 200, WIDTH / 2, HEIGHT, 0xBBA5C8F6);
     olive_save_into_ppm_file(pixels, WIDTH, HEIGHT, "./example/lines.ppm");
     return true;
 }
@@ -52,10 +52,8 @@ bool circle_example()
 {
     olive_fill(pixels, WIDTH, HEIGHT, 0xFFFFFFFF);
 
-    
-    olive_fill_circle(pixels, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, HEIGHT / 4, 0xFF202020);
-        
-    
+    olive_fill_circle(pixels, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, HEIGHT / 4, 0xBB202020);
+
     olive_save_into_ppm_file(pixels, WIDTH, HEIGHT, "./example/circle.ppm");
     return true;
 }

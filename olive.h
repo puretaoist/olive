@@ -7,6 +7,10 @@
 #include <cmath>
 #include <string>
 
+#ifndef OLIVE_AA
+#define OLIVE_AA 2
+#endif
+
 class Olive_Canvas{
     private:
         std::vector<std::uint32_t> pixels;
@@ -50,14 +54,14 @@ typedef enum
     COUNT_COMPS,
 } Comp_Index;
 
-void unpack_rgba32(std::uint32_t c,std::uint8_t comp[COUNT_COMPS]){
+inline void unpack_rgba32(std::uint32_t c,std::uint8_t comp[COUNT_COMPS]){
     for (size_t i = 0; i < COUNT_COMPS;++i){
         comp[i] = c & 0xFF;
         c >>= 8;
     }
 }
 
-std::uint32_t pack_rgba32(std::uint8_t comp[COUNT_COMPS]){
+inline std::uint32_t pack_rgba32(std::uint8_t comp[COUNT_COMPS]){
     std::uint32_t result = 0;
     for (size_t i = 0; i < COUNT_COMPS;++i){
         result |= comp[i] << (8 * i);
@@ -109,6 +113,34 @@ void olive_draw_line(std::vector<std::uint32_t> &pixels, size_t pixels_width, si
                      int x2, int y2, 
                      std::uint32_t color)
 {
+    
+    int dx = abs(x2 - x1);
+    int dy = abs(y2 - y1);
+    int sx = (x1 < x2) ? 1 : -1;  // X 方向
+    int sy = (y1 < y2) ? 1 : -1;  // Y 方向
+    int steep = dy > dx;           // 斜率是否 > 1
+
+    if (steep) { std::swap(dx, dy); }  // 保证 dx >= dy
+
+    int d = 2 * dy - dx;         // 误差项
+    int x = x1, y = y1;
+
+    for (int i = 0; i <= dx; ++i) {
+        int px, py;
+        if (steep) { px = y; py = x; }
+        else       { px = x; py = y; }
+
+        if (px >= 0 && px < (int)pixels_width && py >= 0 && py < (int)pixels_height)
+            pixels[py * pixels_width + px] = olive_mix_color(pixels[py * pixels_width + px], color);
+
+        if (d > 0) {
+            y += sy;
+            d -= 2 * dx;
+        }
+        d += 2 * dy;
+        x += sx;
+    }
+    /*初版
     if (x1!=x2)
     {
         if (x1 > x2)
@@ -146,7 +178,7 @@ void olive_draw_line(std::vector<std::uint32_t> &pixels, size_t pixels_width, si
                 }
             }
         }
-    }
+    }*/
 }
 
 void olive_fill_circle(std::vector<std::uint32_t> &pixels, size_t pixels_width, size_t pixels_height,
@@ -162,19 +194,20 @@ void olive_fill_circle(std::vector<std::uint32_t> &pixels, size_t pixels_width, 
         for (int x = x1; x <= x2; x++)
         {
             int count = 0;
-            for (int soy = 0; soy < 2; ++soy){
-                for (int sox = 0; sox < 2;++sox){
-                    float sx = x + 1.0 / (2 + 1) * (1 + sox);
-                    float sy = y + 1.0 / (2 + 1) * (1 + soy);
-                    float dx = sx - (cx+0.5);
-                    float dy = sy - (cy+0.5);
-                    if (dx * dx + dy * dy <= r * r)
+            for (int soy = 0; soy < OLIVE_AA; ++soy){
+                for (int sox = 0; sox < OLIVE_AA;++sox){
+                    int res = OLIVE_AA + 1;
+
+                    float dx = 2 * res * x + 2 + 2 * sox - 2 * res * cx + res;
+                    float dy = 2 * res * y + 2 + 2 * soy - 2 * res * cy + res;
+                    if (dx * dx + dy * dy <= (res*res*2*2)*r * r)
                     {
                         count += 1;
                     }
                 }
             }
-            std::uint32_t alpha = (float)count / (float)(2 * 2) * 255;
+            float t = (float)count / (float)(OLIVE_AA * OLIVE_AA);
+            std::uint32_t alpha = ((color & 0xFF000000) >> (3 * 8)) * t;
             std::uint32_t update_color = (color & 0x00FFFFFF) | (alpha << (3 * 8));
             pixels[y*pixels_width + x] = olive_mix_color(pixels[y*pixels_width + x],update_color);
 
